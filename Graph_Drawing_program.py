@@ -4,7 +4,9 @@ Created on Sun Apr 25 11:07:00 2021
 
 @author: Abhinav
 """
-
+""" 
+Program that reads CSV files containing the generated position values and plots it on a graph 
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
