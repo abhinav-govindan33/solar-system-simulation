@@ -1,3 +1,9 @@
+"""
+Program that takes initial position and velocity vectors of different celestial objects from HORIZONS Web Interface and generates position values based on the RK4 algorithm.
+Compares these generated position values with those from the HORIZONS interface and gives the percentage error between the two values. 
+"""
+
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +15,9 @@ import astropy.constants as c
 import time 
 
 class body() : 
+    """
+        Class that assigns the initial position and velocity vectors as well as the mass and name to a given celestial body
+    """
     def __init__(self, x_vec, v_vec, mass, name) : 
         self.x_vec = x_vec
         self.v_vec = v_vec
@@ -28,6 +37,9 @@ class body() :
     
     
 class sim() : 
+    """
+        Class that performs the simulation, with the input as "body" class 
+    """
     def __init__(self, bodies) : 
         self.bodies = bodies 
         self.n_bodies = len(bodies)
@@ -41,6 +53,7 @@ class sim() :
         self.calc_diff_eqn = calc_diff_eqn
         
     def rk4(self, t, h,G) :
+        """ Applies the RK4 algorithm using the equation defined previously."""
         k1 = h*self.calc_diff_eqn(t, self.quant_vec,G,self.mass_vec)
         k2 = h*self.calc_diff_eqn(t + 0.5*h , self.quant_vec + 0.5*k1 ,G, self.mass_vec)
         k3 = h*self.calc_diff_eqn(t + 0.5*h , self.quant_vec + 0.5*k2 ,G, self.mass_vec)
@@ -51,6 +64,7 @@ class sim() :
    
     
     def runsim(self, T, h, G,t0 = 0) : 
+        """ Runs the simulation for the given amount of time and at each time point, it calls the rk4 function and updates the quant_vec with the newly generated values""" 
         self.nsteps = int((T-t0)/(h)) 
         self.hist = []
         self.hist.append(self.quant_vec)
@@ -61,6 +75,7 @@ class sim() :
         self.hist = np.array(self.hist)
     
     def plot_orbit(self) : 
+        """ Picks out the x, y and z values from the quant_vec and generates three separate one dimensional arrays. """
         self.x_vals = np.zeros((self.n_bodies,len(self.hist)))
         self.y_vals = np.zeros((self.n_bodies,len(self.hist)))
         self.z_vals = np.zeros((self.n_bodies,len(self.hist))) 
@@ -78,6 +93,7 @@ class sim() :
        
         
 def nbody_solve(t,y, G,masses):
+    """ Function that will be used to solve the gravitational differential equation """
     N_bodies = int(len(y) / 6)
     solved_vector = np.zeros(y.size)
     for i in range(N_bodies):
@@ -103,9 +119,10 @@ def nbody_solve(t,y, G,masses):
                 solved_vector[ioffset+5] += az            
     return solved_vector 
 
+""" Useful Constants and Definitions """ 
 G_vals = np.array([6.67430E-11])
-
 NG = 6.6740005E-11
+
 day = 1/(3652422/10000)
 d_t = 1*day
 Del_t = 10*day
@@ -120,7 +137,7 @@ km = (1E3)/(NA)
 kmps = km*NY
         
 
-
+ """ Initial Data for the given celestial bodies """ 
 #sun = body(x_vec = list(np.array([1019855.1267144, 687730.6519480,40129.1888413])*1000), v_vec = list(np.array([-0.009339943726893, 0.010936844481851, -0.001442116837987])*1000), mass = 1988500E24, name = 'Sun' )
 sun = body(x_vec = list(np.array([0.,0.,0.])*km), v_vec = list(np.array([0., 0., 0.])*kmps), mass = 1988409.870967E24, name = 'Sun' )
 
@@ -136,13 +153,13 @@ v0_v = [3.214637737164854E+01,  1.320439651234144E+01,  1.424293962660558E+00]
 venus = body(x_vec = list(np.array(r0_v)*km), v_vec = list(np.array(v0_v)*kmps), mass = 4.867311928E24, name = 'Venus' )
 
 
-""" earth data """ 
+""" Earth data """ 
 r0 = [-1.407424742173435E+08,  4.495651419958439E+07, -1.844519862557191E+07]
 v0 = [-9.643050088711835E+00, -2.832107300746329E+01,  6.523114017645071E-01] 
 earth = body(x_vec = list(np.array(r0)*km), v_vec = list(np.array(v0)*kmps), mass = 6.045645225E24, name = 'Earth' )
 
 
-""" mars data """ 
+""" Mars data """ 
 r0_m = [-1.965079196531301E+08, -1.240344437254834E+08, -1.380155858781657E+07]
 v0_m = [1.423536316245344E+01, -1.874875220753668E+01,  1.963126602524141E+00]
 mars = body(x_vec = list(np.array(r0_m)*km), v_vec = list(np.array(v0_m)*kmps), mass = 0.6416908140E24, name = 'Mars' )
@@ -175,8 +192,6 @@ r0_pluto = [3.324092012988805E+09, -4.245211670416664E+09, -5.065557470396831E+0
 v0_pluto = [4.450231357145345E+00,  2.116705184374955E+00, -1.513791928229923E+00]
 pluto = body(x_vec = list(np.array(r0_pluto)*1000), v_vec = list(np.array(v0_pluto)*1000), mass = 1.303E22, name = 'Pluto' )
 
-
-
 """ Ceres Data """ 
 r0_ceres = [3.871079333790370E+08, -2.110875871409383E+08, -7.634013663169853E+07]
 v0_ceres = [7.690862905958148E+00,  1.457213498229990E+01, -1.141518518761349E+00]
@@ -201,11 +216,13 @@ hygiea   = body(x_vec = list(np.array(r0_hygiea)*1000), v_vec = list(np.array(v0
 
 start_time = time.time()
 
+""" Initialize the bodies array with the above celestial body objects """ 
 bodies1 = [sun,uranus,jupiter, saturn, neptune, earth, mars, mercury, venus, pluto, ceres, pallas, vesta, hygiea]
 
+""" Empty array that will get populated with simulations for different values of G """ 
 simulations = []
 
-
+""" Perform the simulation for given amount of time, for different values of G """ 
 for i in range(0,len(G_vals)) : 
     s_t = sim(bodies1)
     s_t.set_eqn(nbody_solve)
@@ -224,18 +241,20 @@ xU_vals = []
 yU_vals = []
 zU_vals = []
 
+""" Position coordinates of Uranus with respect to the Sun """ 
 for i in range(0,len(G_vals)) : 
     xU_vals.append(np.subtract(simulations[i].x_vals[1], simulations[i].x_vals[0] ))
     yU_vals.append(np.subtract(simulations[i].y_vals[1], simulations[i].y_vals[0] ))
     zU_vals.append(np.subtract(simulations[i].z_vals[1], simulations[i].z_vals[0] ))
 
 
-"""Uranus Data from Horizons  """
+""" Uranus Data from Horizons  """
 data = pd.read_csv("U_Data_1Day.csv", sep=r'\s*,\s*', engine = 'python')
 r_vals_re = []
 for i in range(len(data['rx'])) : 
     r = (np.sqrt(((data['rx'][i])**2) + ((data['ry'][i])**2) + ((data['rz'][i])**2) ))
     r_vals_re.append(r*km)
+    
 x_vals_re = []
 y_vals_re = []
 z_vals_re = []
@@ -248,69 +267,45 @@ for i in range(0,len(data['rx'])) :
     z_vals_re.append(z)
 
 
-
+""" Initialize array for the percentage error values """    
 diff_1re = np.zeros((len(G_vals),len(xU_vals[0])))
 
-
-
-
+""" Percentage error is calculated as magnitude of the difference vector between HORIZONS data and generated data """
 for i in range(0,len(G_vals)) : 
         for j in range(0,len(xU_vals[0])) :
-            
             diffmag_1re = (np.sqrt((xU_vals[i][j]-x_vals_re[j])**2 + (yU_vals[i][j]-y_vals_re[j])**2 + (zU_vals[i][j]-z_vals_re[j])**2))
             r_diff_1re = ((diffmag_1re)/(np.sqrt((x_vals_re[j])**2 + (y_vals_re[j])**2 + (z_vals_re[j])**2)))*100
             diff_1re[i][j] = r_diff_1re
      
 
+""" To check total time taken by the program to execute """
 print("total time taken : ", time.time() - start_time, "\n No of Bodies : ", len(bodies1))
 
-
-
-
-
-""" 
+""" Print the percentage error of the last value """ 
 last = len(diff_1re[0]) - 1 
-
 compare = []
 for i in range(0,len(G_vals)) : 
-    
     print(diff_1re[i][last], "----", G_vals[i], "\n")
     compare.append(diff_1re[i][last])
-   """ 
-
-
-"""
+ 
+""" Create a CSV file with the percentage error values """ 
 df_jvData_diff = pd.DataFrame({'Percent_error': diff_1re[0]})
 df_jvData_diff.to_csv('Diff_Vectors_for_JV_data_SU.csv')
 
-"""
-
-
-"""
+""" Create array for the time values to be plotted on X-Axis in units of "Years"  """ 
 time_ax = range(0,int(365.2422*t_end) + 1)
 time = list(np.array(time_ax)/365)
 
-
-
+""" Plot the graph of percentage error versus time as a log graph """ 
 plt.figure(1)
 plt.plot(time, diff_1re[0], color = 'black', label = 'Model A vs Real')
-#plt.xlabel('Time')
-#plt.ylabel('Error')
+plt.xlabel('Time (Years)')
+plt.ylabel('%E rror')
 plt.yscale('log')
 plt.legend()
 plt.savefig("ALL.pdf", bbox_inches='tight')
-"""
-
-"""
-#print(diff_1re[10])
-
-#(np.sqrt((simulation1.x_vals[7][i]-x_vals_re[i])**2 + (simulation1.y_vals[7][i]-y_vals_re[i])**2 + (simulation1.z_vals[7][i]-z_vals_re[i])**2))
 
 
-#t_eval = np.linspace(0,86400*365*n,365*n),
-
-
-"""
 
 
 
